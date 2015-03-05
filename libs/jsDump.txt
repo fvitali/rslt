@@ -1,0 +1,5 @@
+FILE DELETED
+
+Microsoft Forefront Protection for Exchange Server removed a file since it was found to match a filter.
+File name: "rslt-github.zip->jsDump.js"
+Filter name: "FILE FILTER= edg1 blocked filename patterns: *.js"

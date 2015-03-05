@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<!--
+Lancet Data Browser - Another RSLT example
+by Fabio Vitali
+This work is licensed under a Creative Commons Attribution 4.0 International License (http://creativecommons.org/licenses/by/4.0/).
+You are free to:
+* Share - copy and redistribute the material in any medium or format
+* Adapt - remix, transform, and build upon the material
+for any purpose, even commercially.
+The licensor cannot revoke these freedoms as long as you follow the license terms.
+Under the following terms:
+* Attribution - You must give appropriate credit, provide a link to the license, and indicate if changes were made. You may do so in any reasonable manner, but not in any way that suggests the licensor endorses you or your use.
+-->
+<html ng-app="lancet">
+	<head>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<link href="//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.css" rel="stylesheet">
+		<link rel="stylesheet" href="//ajax.googleapis.com/ajax/libs/jqueryui/1.11.0/themes/eggplant/jquery-ui.css">
+		<link rel="stylesheet" type="text/css" href="lancet.css" />
+		<!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+		<!--[if lt IE 9]>
+		<script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+		<script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+		<![endif]-->
+		<title>Lancet Data Browser - An RSLT example</title>
+	</head>
+	<body ng-controller="lancetCtrl">
+		<div class="wrap">
+			<div class="navbar-wrapper">
+				<div class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+					<div class="container">
+					<div class="navbar-header">
+						<button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+						<span class="sr-only">Toggle navigation</span>
+						<span class="icon-bar"></span>
+						<span class="icon-bar"></span>
+						<span class="icon-bar"></span>
+						</button>
+						<a class="navbar-brand" href="#">Lancet Data Browser</a>
+					</div>
+					<div class="navbar-collapse collapse">
+						<ul class="nav navbar-nav">
+							<li><a href="#" role="button" data-toggle="modal" data-target="#info">Info</a></li>
+							<li><a href="#" role="button" data-toggle="modal" data-target="#contatti">Contacts</a></li>
+						</ul>
+						<form class="navbar-form pull-right">
+							<input type="text" id="search" class="form-control" placeholder="Search author..."  ng-model="$root.authorName" ng-keypress="($event.which === 13)?fetch('name',$root.authorName):0">
+							<a ng-click="search($root.authorName)"><span class="glyphicon glyphicon-search white"></span></a>
+						</form>
+					</div>
+					</div>
+				</div>
+			</div>
+
+			<div class='container body'>
+				<div class="row clearfix">
+					<div class="col-md-3 col-sm-4 col-xs-4 authorList" id='left'>   </div>
+					<div class="col-md-9 col-sm-8 col-xs-8 authorPapers" id='right'>  </div>
+				</div>
+				<!-- Modal dialogs -->
+				<div class="modal fade" id="info" tabindex="-1" role="dialog" aria-labelledby="info" aria-hidden="true">
+					<div class="modal-dialog">
+						<div class="modal-content">
+							<div class="modal-header">
+								<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+								<h4 class="modal-title" id="myModalLabel">Lancet Data Browser (v. 7)</h4>
+							</div>
+							<div class="modal-body big">
+								<p>A first experiment of displaying information from a triple store</p>
+								<h4>History of releases</h4>
+								<ol>
+									<li><b>(15/7/2014)</b>: First release (<a ng-href="{{base}}1/">permanent URL</a>)</li>
+									<li><b>(15/7/2014)</b>: Moved query in HTML template, added authors (<a ng-href="{{base}}2/">permanent URL</a>)</li>
+									<li><b>(15/7/2014)</b>: Fixed nasty asynchronicity issue, improved search, added author list (<a ng-href="{{base}}3/">permanent URL</a>)</li>
+									<li><b>(16/7/2014)</b>: Added chevrons, loading message, filter for missing values (<a ng-href="{{base}}4/">permanent URL</a>)</li>
+									<li><b>(18/7/2014)</b>: Changed server, improved speed, modified scrolling list of authors, added DOIs and link to item's page (<a ng-href="{{base}}5/">permanent URL</a>)</li>
+									<li><b>(28/7/2014)</b>: Added auto-completion on authors (<a ng-href="{{base}}6/">permanent URL</a>)</li>
+									<li><b>(12/10/2014)</b>: Based on RSLT!!! (<a ng-href="{{base}}7/">permanent URL</a>)</li>
+								</ol>
+								<p>Go to the <a ng-href="{{base}}">most recent release</a>.</p>
+							</div>
+						</div>
+					</div>
+				</div>
+				<div class="modal fade" id="contatti" tabindex="-1" role="dialog" aria-labelledby="contatti" aria-hidden="true">
+					<div class="modal-dialog">
+						<div class="modal-content">
+							<div class="modal-header">
+								<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+								<h4 class="modal-title" id="myModalLabel">Contacts</h4>
+							</div>
+							<div class="modal-body big">
+								<p>Please write <a href="mailto:fabio@cs.unibo.it">Fabio Vitali</a> for more informations.</p>
+							</div>
+						</div>
+					</div>
+				</div>
+				<!-- /Modal dialogs -->
+				
+			</div> <!-- container -->
+
+			<div id="push"></div>
+		</div>
+
+		<!-- FOOTER -->
+		<div class="footer">
+			<div class="container">
+			<p class="muted credit">
+				&copy; 2014 TechWebBo Lab @ Computer Science Department, University of Bologna &middot;
+			</p>
+			</div>
+		</div>
+
+		<rslt triplestore="http://two.eelst.cs.unibo.it:8181/data/query">
+			<prefix ns="rdf: http://www.w3.org/1999/02/22-rdf-syntax-ns#" />
+			<prefix ns="rdfs: http://www.w3.org/2000/01/rdf-schema#" />
+			<prefix ns="foaf: http://xmlns.com/foaf/0.1/" />
+			<prefix ns="frbr: http://purl.org/vocab/frbr/core#" />
+			<prefix ns='co: http://purl.org/co/' />
+			<prefix ns="pro: http://purl.org/spar/pro/" />
+			<prefix ns="dcterms: http://purl.org/dc/terms/" />
+			<prefix ns="fabio: http://purl.org/spar/fabio/" />
+			<prefix ns="cito: http://purl.org/spar/cito/" />
+			<prefix ns="c4o: http://purl.org/spar/c4o/" />
+			<prefix ns="prism: http://prismstandard.org/namespaces/basic/2.0/" />
+			<prefix ns="sro: http://salt.semanticauthoring.org/ontologies/sro#" />
+
+			<template name='start'>
+				<calltemplate name="authorList" renderTo='#left'></calltemplate>
+				<calltemplate name="name" renderTo='#right'></calltemplate>
+			</template>
+			<template name='authorList'>
+				<foreach select = "??persons rdf:type foaf:Person." collected>
+					<h4 class="top">Authors by name</h4>
+					<ul class="nav nav-list" ng-init="$root.authorlist = $root.byInitial(persons,'foaf_familyName')">
+					<li ng-repeat="(key, group) in $root.authorlist">
+						<label class="tree-toggler nav-header"><i class="glyphicon glyphicon-chevron-right"></i> {{key }} <span class="authorName">({{group.length}} names)</span></label>
+						<ul class="nav nav-list tree hide">
+							<li ng-repeat="person in group | orderBy: ['foaf_familyName','foaf_givenName']">
+								<a ng-click="$root.fetch('uri',person.uri)">
+									{{person.foaf_givenName | single}} {{person.foaf_familyName | single}}
+								</a>
+							</li>
+						</ul>
+					</li>
+					</ul>
+				</foreach>
+			</template>
+			<template name='name'>
+				<at select="??person foaf:familyName '{{$root.authorName}}'" preload="
+					?person pro:holdsRoleInTime ??q.
+					?q pro:relatesToDocument ??work.
+					?work frbr:realization ??expr.
+					?work frbr:creator ??list.
+					?list co:item ??item.
+					?item co:itemContent ??author.
+					?expr c4o:hasGlobalCitationFrequency ??freq.
+					?expr frbr:embodiment ??manif.
+					?expr (^frbr:part)+ ??issue.">
+					<ifnone>
+						<h3>We found no papers authored by {{$root.authorName}}</h3>
+					</ifnone>
+				</at>
+			</template>
+			<template name='uri'>
+				<at select="{{$root.authorUri}}"></at>
+			</template>
+			<template name='issue'>
+				<at select="{{$root.selectedIssue}}"  mode="alone"></at>
+			</template>
+			<template match="?person -> foaf:Person" priority='5'>
+				<h3>We found {{ x=count(person.pro_holdsRoleInTime) }} paper{{ x | plural }} authored
+				by {{person.foaf_givenName}} {{person.foaf_familyName | single}}:</h3> 
+				<ol><at select='?person pro_holdsRoleInTime / pro_relatesToDocument ??work'></at></ol>
+			</template>
+			<template match="?person -> foaf:Person" priority='4'>
+				<h3>{{ x=count(person.pro_holdsRoleInTime) }} paper{{ x | plural }}
+				by {{person.foaf_givenName}} {{person.foaf_familyName | single}}:</h3> 
+				<ol><at select='?person pro_holdsRoleInTime / pro_relatesToDocument ??work'></at></ol>
+			</template>
+			<template match="?person -> foaf:Person" priority='4'>
+				<h3>{{person.foaf_givenName}} {{person.foaf_familyName | single}}: {{ count(person.pro_holdsRoleInTime) }} papers</h3> 
+				<ol><at select='?person pro_holdsRoleInTime / pro_relatesToDocument ??work'></at></ol>
+			</template>
+			<template match="?work -> fabio:Work">
+				 <li>
+					<at select='?work frbr:creator/co:item/co:itemContent ??author' mode="simple" ></at>. 
+					<at select='?work frbr:realization ??exp.' ></at>
+				</li>
+			</template>
+			<template match="?person -> foaf:Person" mode="simple">
+				<a ng-click="$root.fetch('uri',person.uri)">
+					{{person.foaf_givenName[0]}}. {{person.foaf_familyName | single}}<span ng-if="!last">, </span>
+				</a>
+			</template>
+			<template match='?exp -> fabio:Expression'>
+				<i>{{exp.dcterms_title}}</i>,
+				in <at select="??issue frbr:part ?exp"></at> 
+				{{exp.fabio_hasPublicationYear | wrap:'($$)'}}, 
+				<at select="?exp frbr:embodiment ??manif"></at> 
+				DOI: {{exp.prism_doi}}. Cites {{x=count(exp.cito_cites) }} paper{{ x | plural }} and is cited by 
+				<foreach select="?exp c4o:hasGlobalCitationFrequency ??gcf">{{ gcf.c4o_hasGlobalCountValue }}</foreach>
+				more.
+				<at select="?exp frbr:part ??part"></at>
+			</template>
+			<template match="?issue -> fabio:JournalIssue">
+				<a ng-click="$root.fetch('issue',issue.uri)">
+					<i>{{issue.dcterms_title | wrap:'"$$", ' }}</i>
+					<at select="?issue frbr_partOf ??vol"></at>{{issue.prism_issueIdentifier | wrap:"($$)"}}
+				</a>
+			</template>
+			<template match="?vol -> fabio:JournalVolume">
+				<at select="?vol frbr_partOf ??journal"></at> 
+			   {{vol.prism_volume }}</template>
+			<template match="?abstract -> sro:Abstract">
+				<p class="small"><b>Abstract: </b> {{abstract.c4o_hasContent}}</p>
+			</template>
+			<template match="?manif -> fabio:PrintObject">
+					&nbsp;p. {{manif.prism_startingPage }}-{{manif.prism_endingPage }}&nbsp; 
+			</template>
+			<template match="?manif -> fabio:WebPage">
+					(<a ng-href="{{manif.frbr_exemplar | strip}}" target="_new">HTML version</a>), 
+			</template>
+			<template match="?issue -> fabio:JournalIssue" mode="alone">
+				<h2><i ng-if='issue.dcterms_title'>{{issue.dcterms_title }}</i></h2>
+				<h3><at select="?issue frbr_partOf ??vol" mode="issue"></at>, 
+				issue {{issue.prism_issueIdentifier}}:</h3>
+				<ol type="a">
+					<at select="?issue frbr_part ??parts" mode="issue"></at>
+				</ol>
+			</template>
+			<template match="?vol -> fabio:JournalVolume" mode="issue">
+				<at select="?vol frbr_partOf ??journal"></at>, 
+				volume {{vol.prism_volume }}</template>
+			<template match='?exp -> fabio:Expression' mode="issue">
+				<li>
+				<at select="?exp frbr_realizationOf/frbr:creator/co:item/co:itemContent ??author" mode="simple"></at>
+				<i>{{exp.dcterms_title}}</i>, cites {{x=count(exp.cito_cites) }} 
+				  paper{{ x | plural }} and is cited by 
+				<foreach select="?exp c4o:hasGlobalCitationFrequency ??gcf">{{ gcf.c4o_hasGlobalCountValue }}</foreach>
+				more.
+				  <at select="?exp frbr:embodiment ??manif"></at> 
+				  DOI: {{exp.prism_doi}}.
+				 <at select="?exp frbr:part ??part"></at>
+				</li>
+			</template>
+		</rslt>
+
+		<script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.js"></script>
+		<script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.11.0/jquery-ui.js"></script>
+		<script src="//netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.js"> </script>
+		<script src="//ajax.googleapis.com/ajax/libs/angularjs/1.2.12/angular.js"></script>
+		<script src="http://angular-ui.github.io/bootstrap/ui-bootstrap-tpls-0.10.0.js"></script>
+		<script src="//cdn.jsdelivr.net/webshim/1.14.5/polyfiller.js"> </script>
+		<script src="rslt.js"> </script>
+		<script type="text/javascript"> 
+			'use strict';
+
+			var timer;
+			var app = angular.module('lancet', ['rslt', 'ui.bootstrap']);
+
+			app.controller('lancetCtrl', ['$rootScope', 'rslt', function($rootScope, rslt) {
+				$rootScope.calltemplate = rslt.calltemplate.bind($rootScope)
+				$rootScope.byInitial = byInitial
+
+				$rootScope.authorName ="Horrocks"
+	
+				$rootScope.fetch = function(type,val) {
+					this.selectedIssue = type=='issue'?val:''
+					this.authorName = type=='uri'?entities[val].foaf_familyName:''
+					this.authorUri  = type=='uri'?entities[val].uri:''
+					this.calltemplate(type,'#right',true)
+				}
+				$rootScope.search = function() {
+					this.authorUri  = ''
+					this.calltemplate('name','#right',true)
+				}
+			}])
+
+			$(document).ready(function() {
+				$('.authorList').height($(document).height() - (30 +  $('.navbar').height() + $('.footer').height()))
+				$('.authorPapers').height($(document).height() - (30 + $('.navbar').height() + $('.footer').height()))
+
+				$('#left').on('click','label.tree-toggler', function () {
+					$(this).parent().children('ul.tree.hide').addClass('abc');
+					$('ul.tree').addClass('hide');
+					$(this).parent().children('ul.tree.hide.abc').removeClass('hide').removeClass('abc');
+		
+					$(".glyphicon-chevron-right",this).removeClass("glyphicon-chevron-right").addClass("abc")		
+					$(".glyphicon-chevron-down",this).removeClass("glyphicon-chevron-down").addClass("glyphicon-chevron-right")		
+					$(".abc",this).addClass("glyphicon-chevron-down").removeClass("abc")		
+				})
+			})
+
+			function byInitial(items,prop){
+				var collected = {}
+				for (var i=0; i<items.length; i++){
+					var item = items[i][prop]
+					if ($.isArray(item)) item = item[0]
+					var initial = item[0].toUpperCase()
+					if (!collected[initial]) collected[initial] = []
+					collected[initial].push(items[i])
+				}
+				return collected;
+			};	
+			
+		</script>
+	</body>
+</html> 

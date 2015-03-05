@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<!--
+RSLT playground
+by Fabio Vitali
+This work is licensed under a Creative Commons Attribution 4.0 International License (http://creativecommons.org/licenses/by/4.0/).
+You are free to:
+* Share - copy and redistribute the material in any medium or format
+* Adapt - remix, transform, and build upon the material
+for any purpose, even commercially.
+The licensor cannot revoke these freedoms as long as you follow the license terms.
+Under the following terms:
+* Attribution - You must give appropriate credit, provide a link to the license, and indicate if changes were made. You may do so in any reasonable manner, but not in any way that suggests the licensor endorses you or your use.
+-->
+<html ng-app="myQuery">
+	<head>
+		<title>RSLT playground</title>
+		<link href="//maxcdn.bootstrapcdn.com/bootswatch/3.2.0/united/bootstrap.min.css" rel="stylesheet">
+		<link href="base.css" rel="stylesheet">
+		<script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.js"></script>
+		<script src="//netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.js"> </script>
+		<script src="//ajax.googleapis.com/ajax/libs/angularjs/1.2.12/angular.js"></script>
+		<script src="http://angular-ui.github.io/bootstrap/ui-bootstrap-0.10.0.js"></script>
+		<script src="http://angular-ui.github.io/bootstrap/ui-bootstrap-tpls-0.10.0.js"></script>
+		<script src="//cdn.jsdelivr.net/webshim/1.14.5/polyfiller.js"> </script>
+		<script src="rslt.js"> </script>
+		<script> 
+			$(document).ready(main);
+
+			function main() {
+				$('.right').height($(document).height() - (30 +  $('.navbar').height() + $('.footer').height()))
+				$('.left').height($(document).height() - (30 + $('.navbar').height() + $('.footer').height()))
+			}
+			function reset() { 
+				var ok = confirm("Do you want to reset all playground data to the original defaults?")
+				if (ok) {
+					delete localStorage['RSLTplayground'] 
+					location.reload()
+				}
+			}
+			
+			function switchAction(value) {
+				$('#collapseTriplestore').collapse('show')				
+				if (value==1) {
+					$('#Panel-prefixes').hide()
+					$('#Panel-startwith').hide()
+					$('#Panel-preload').hide()
+					$('#Panel-queries').hide()
+				} else {
+					$('#Panel-prefixes').show()
+					$('#Panel-startwith').show()
+					$('#Panel-preload').show()
+					$('#Panel-queries').show()
+				}
+				debugger; 
+			}
+		
+			var finalQuery ;
+			var prefixes ;
+
+			var app = angular.module('myQuery', ['rslt','ui.bootstrap']);
+			app.directive('collapsible', function() {
+				return function(scope, element, attrs) {
+					$(element).collapse()
+				};
+			});
+			app.controller('myCtrl', function($scope, $compile, $interpolate, $timeout, $window) {
+				$('.collapse').collapse({toggle: false})
+				
+				$scope.compile = $compile
+				$scope.interpolate = $interpolate
+				$scope.encode = encodeURI
+				$scope.startQuery = function() {
+					var tpl = $('#queryTemplate').html()
+					var s = $scope.interpolate(tpl)(this)
+					var out = $scope.compile(s)(this)
+					$('#output').html(out)
+				}
+				$scope.short = function(s) {
+					return prefixes.short(s)
+				}
+				if ($window.localStorage['RSLTplayground']) {
+					d = JSON.parse($window.localStorage['RSLTplayground'])
+					$scope.data = {
+						activity: d.activity,
+						triplestore: d.triplestore,
+						prefixes: d.prefixes,
+						startWith: d.startWith,
+						preload: d.preload,
+						xtemplates: d.xtemplates,
+						jtemplates: d.jtemplates
+					}
+				} else {
+					$scope.data = {
+						activity: 0,
+						triplestore: "http://two.eelst.cs.unibo.it:8181/data/query",
+						prefixes: $('#prefixes').html().trim(),
+						startWith: $('#startwith').html().trim(),
+						preload: $('#preload').html().trim(),
+						xtemplates: $('#templates').html().replace(/\[\[/g,'{{').replace(/\]\]/g,'}}').trim(),
+						jtemplates: $('#jsontemplates').html().trim()
+					}
+				}
+				$scope.finalQuery = [] ;
+				$scope.currentQuery = 0; 
+				$scope.$watch(function() {return finalQuery},function(newValue) { 
+						$scope.finalQuery.push(newValue) 
+				})
+				$scope.$watch(function() {return entities},function(newValue) { 
+					$scope.entities = newValue 
+					$timeout(function() {
+						$('*[collapsible]').collapse('hide')
+					}, 2000)
+				})
+				$scope.$watch('data', function(newV, oldV) {
+					var d = {
+						activity: $scope.data.activity,
+						triplestore: $scope.data.triplestore,
+						prefixes: $scope.data.prefixes,
+						startWith: $scope.data.startWith,
+						preload: $scope.data.preload,
+						xtemplates: $scope.data.xtemplates,
+						jtemplates: $scope.data.jtemplates
+					}
+					$window.localStorage['RSLTplayground'] = JSON.stringify(d)
+				}, true);
+			});
+			app.filter('test', function() {
+				return function(input) {
+					return input;
+				};
+			})
+		</script>
+	</head>
+<body ng-controller="myCtrl">
+		<div class="wrap">
+			<div class="navbar navbar-default navbar-fixed-top" role="navigation">
+				<div class="container">
+					<div class="navbar-header">
+						<button type="button" class="navbar-toggle" 
+								data-toggle="collapse" data-target=".navbar-collapse">
+							<span class="sr-only">Toggle navigation</span>
+							<span class="icon-bar"></span>
+							<span class="icon-bar"></span>
+							<span class="icon-bar"></span>
+						</button>
+						<a class="navbar-brand" href="#">RSLT Playground</a>
+					</div>
+					<div class="navbar-collapse collapse">
+						<ul class="nav navbar-nav">
+						<li><a href="#" role="button" data-toggle="modal" data-target="#about">About</a></li>
+						<li><a href="#" role="button" data-toggle="modal" data-target="#help">Help</a></li>
+						</ul>
+					</div><!--/.nav-collapse -->
+				</div>
+			</div>
+
+			<div class="container body">
+				<div class="row clearfix">
+					<div class="col-md-6 left">
+						<div class="panel-group spaceOver" id="leftAccordion">
+						  <div class="panel panel-default"  id="Panel-uri">
+							<div class="panel-heading">
+							  <h4 class="panel-title">
+								<a data-toggle="collapse" data-parent="#leftAccordion" href="#collapseTriplestore">
+								  Query a triplestore
+								</a>
+								<input type="range" id="slider" min="0" max="1" style="width: 40px;" onchange="switchAction(this.value)"/>
+								<a data-toggle="collapse" data-parent="#leftAccordion" href="#collapseTriplestore">
+								  Load a file
+								</a>
+							  </h4>
+							</div>
+							<div id="collapseTriplestore" class="panel-collapse collapse">
+							  <div class="panel-body">
+								<textarea rows="1" cols="60" id="ta-triplestore" ng-model='data.triplestore'></textarea>
+							  </div>
+							</div>
+						  </div>
+						  <div class="panel panel-default" id="Panel-prefixes">
+							<div class="panel-heading">
+							  <h4 class="panel-title">
+								<a data-toggle="collapse" data-parent="#leftAccordion" href="#collapsePrefixes">
+								  Prefixes
+								</a>
+							  </h4>
+							</div>
+							<div id="collapsePrefixes" class="panel-collapse collapse">
+							  <div class="panel-body">
+								<textarea rows="15" cols="60" id="ta-prefixes" ng-model='data.prefixes'></textarea>
+							  </div>
+							</div>
+						  </div>
+						  <div class="panel panel-default" id="Panel-startwith">
+							<div class="panel-heading">
+							  <h4 class="panel-title">
+								<a data-toggle="collapse" data-parent="#leftAccordion" href="#collapseStartWith">
+								  Start-with entities
+								</a>
+								<button id="startQuery" ng-click="startQuery()">Start</button>
+								<span class="small">Use double question marks on the <i>start-with variables</i></span>
+							  </h4>
+							</div>
+							 <div id="collapseStartWith" class="panel-collapse collapse in">
+							  <div class="panel-body">
+								<textarea rows="3" cols="60" id="ta-startWith" ng-model='data.startWith'></textarea>
+							  </div>
+							</div>
+						 </div>
+						  <div class="panel panel-default" id="Panel-preload">
+							<div class="panel-heading">
+							  <h4 class="panel-title">
+								<a data-toggle="collapse" data-parent="#leftAccordion" href="#collapsePreload">
+								  Pre-load entities
+								</a>
+								<span class="small">Use double question marks on the variables to be loaded</span>
+							  </h4>
+							</div>
+							<div id="collapsePreload" class="panel-collapse collapse">
+							  <div class="panel-body">
+								<textarea rows="15" cols="60" id="ta-preload" ng-model='data.preload'></textarea>
+							  </div>
+							</div>
+						  </div>
+						  <div class="panel panel-default" id="Panel-queries">
+							<div class="panel-heading">
+							  <h4 class="panel-title">
+								<a data-toggle="collapse" data-parent="#leftAccordion" href="#collapseFinalquery">
+								  Performed Queries 
+								  <input type="range" name="queries" min="0" max="{{finalQuery.length}}" ng-model="currentQuery">
+								</a>
+							  </h4>
+							</div>
+							<div id="collapseFinalquery" class="panel-collapse collapse">
+							  <div class="panel-body">
+							  <pre class="small">{{finalQuery[currentQuery] | test }}
+							  </pre>
+							  </div>
+							</div>
+						  </div>
+						  <div class="panel panel-default" id="Panel-loaded">
+							<div class="panel-heading">
+							  <h4 class="panel-title">
+								<a data-toggle="collapse" data-parent="#leftAccordion" href="#collapseLoadedentities">
+								  Loaded entities
+								</a>
+							  </h4>
+							</div>
+							<div id="collapseLoadedentities" class="panel-collapse collapse">
+							  <div class="panel-body">
+								<div ng-repeat="(type,list) in entities['#type']" id="#list">
+									<h5>
+									 <a data-toggle="collapse" data-parent="#list" href="#type{{$index}}">{{short(type)}}</a>
+									</h5>
+									<ol id="type{{$index}}" collapsible>
+										<li ng-repeat="item in list">
+											<h5>
+												<a data-toggle="collapse" href="#{{type.hashCode()+'_'+entities[item].uri.hashCode()}}"> {{entities[item].rdfs_label}}
+												</a>
+											</h5>
+											<ul id="{{type.hashCode()+'_'+entities[item].uri.hashCode()}}" collapsible>
+												<li ng-repeat="(p,o) in entities[item]" ng-if="p[0]!='#'">
+													<b>{{ short(p) }}</b>: {{o}}</li>	
+											</ul>
+										</li> 
+									</ol>
+								</div>
+							  </div>
+							</div>
+						  </div>
+						</div>
+					</div>
+					<div class="col-md-6 right">
+						<div class="panel-group spaceOver" id="rightAccordion">
+						  <div class="panel panel-default">
+							<div class="panel-heading">
+							  <h4 class="panel-title">
+								<a data-toggle="collapse" data-parent="#rightAccordion" href="#collapseJsontemplates">
+								  JSON Templates
+								</a>
+							  </h4>
+							</div>
+							<div id="collapseJsontemplates" class="panel-collapse collapse">
+							  <div class="panel-body">		
+								<textarea rows="15" cols="70"  id="ta-jtemplates" ng-model='data.jtemplates' class="small">
+								</textarea>
+							  </div>
+							</div>
+						  </div>
+						  <div class="panel panel-default">
+							<div class="panel-heading">
+							  <h4 class="panel-title">
+								<a data-toggle="collapse" data-parent="#rightAccordion" href="#collapseXmltemplates">
+								  XML Templates
+								</a>
+							  </h4>
+							</div>
+							<div id="collapseXmltemplates" class="panel-collapse collapse">
+							  <div class="panel-body">		
+								<textarea rows="15" cols="70"  id="ta-xtemplates" ng-model='data.xtemplates' class="small">
+								</textarea>
+							  </div>
+							</div>
+						  </div>
+						  <div class="panel panel-default">
+							<div class="panel-heading">
+							  <h4 class="panel-title">
+								<a data-toggle="collapse" data-parent="#rightAccordion" href="#collapseOutput">
+								  Output
+								</a>
+							  </h4>
+							</div>
+							 <div id="collapseOutput" class="panel-collapse collapse in">
+							  <div class="panel-body">
+								<div id="output"></div>
+							  </div>
+							</div>
+						 </div>
+						  <div class="panel panel-default">
+							<div class="panel-heading">
+							  <h4 class="panel-title">
+								<a data-toggle="collapse" data-parent="#rightAccordion" href="#collapseError">
+								  Error
+								</a>
+							  </h4>
+							</div>
+							<div id="collapseError" class="panel-collapse collapse">
+							  <div class="panel-body"><pre id="error" class="input"> </pre></div>
+							</div>
+						  </div>
+						</div>
+					</div>
+				</div>	
+			</div>
+			<div id="push"></div>
+		</div>
+		<div class="footer">
+			<div class="container">
+				<p class="muted credit">
+					&copy; 2014 Fabio Vitali, University of Bologna &middot;
+				</p>
+			</div>
+		</div>
+
+
+<!-- Modal -->
+<div class="modal fade" id="about" tabindex="-1" role="dialog" aria-labelledby="About RSLT Playground" aria-hidden="true">
+	<div class="modal-dialog">
+	<div class="modal-content">
+		<div class="modal-header">
+		<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+		<h4 class="modal-title" id="myModalLabel">About RSLT Playground</h4>
+		</div>
+		<div class="modal-body">
+<p>RSLT Playground is an interactive tool for working with RSLT stylesheets for RDF triples and entities. </p>
+<p>This is version 0.1 nep&alpha;l (not even pre-alpha level), October 2014 </p>
+<p>It was created in the Web technologies lab of the University of Bologna by Fabio Vitali (<a href="mailto:fabio@cs.unibo.it">fabio@cs.unibo.it</a>)</p>
+		</div>
+		<div class="modal-footer">
+		<button type="button" class="btn pull-left test" onclick="reset()">Reset data</button>
+		<button type="button" class="btn btn-primary" data-dismiss="modal">Ok</button>
+		</div>
+	</div>
+	</div>
+</div>
+<div class="modal fade" id="help" tabindex="-1" role="dialog" aria-labelledby="Help" aria-hidden="true">
+	<div class="modal-dialog">
+	<div class="modal-content">
+		<div class="modal-header">
+		<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+		<h4 class="modal-title" id="myModalLabel">Help</h4>
+		</div>
+		<div class="modal-body">
+HELP!!!
+		</div>
+		<div class="modal-footer">
+		<button type="button" class="btn btn-primary" data-dismiss="modal">Ok</button>
+		</div>
+	</div>
+	</div>
+</div>
+
+
+
+</body>
+<script id="prefixes"  type="text/template">
+PREFIX co: <http://purl.org/co/>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX frbr: <http://purl.org/vocab/frbr/core#>
+PREFIX foaf: <http://xmlns.com/foaf/0.1/>
+PREFIX dcterms: <http://purl.org/dc/terms/>
+PREFIX fabio: <http://purl.org/spar/fabio/>
+PREFIX pro: <http://purl.org/spar/pro/>
+PREFIX pso: <http://purl.org/spar/pso/>
+PREFIX cito: <http://purl.org/spar/cito/>
+PREFIX c4o: <http://purl.org/spar/c4o/>
+PREFIX prism: <http://prismstandard.org/namespaces/basic/2.0/>
+PREFIX sro: <http://salt.semanticauthoring.org/ontologies/sro#>
+</script>
+<script id="startwith"  type="text/template">??person foaf:givenName 'David'.</script>
+<script id="preload"  type="text/template">?person pro:holdsRoleInTime ??q.
+?q pro:relatesToDocument ??work.
+?work frbr:realization ??expr.
+?work frbr:creator ??list.
+?list co:item ??item.
+?item co:itemContent ??author.
+?expr c4o:hasGlobalCitationFrequency ??freq.
+?expr frbr:embodiment ??manif.
+?expr (^frbr:part)+ ??issue. 
+</script>
+<script id="templates"  type="text/template">
+<template match="?person -> foaf:Person" priority='4'>
+	<p>We found {{ count(person.pro_holdsRoleInTime) }} papers authored
+	by {{person.foaf_givenName}} {{person.foaf_familyName | single}}:</p> 
+	<ol><at select='?person pro_holdsRoleInTime / pro_relatesToDocument ??work'></at></ol>
+</template>
+<template match="?work -> fabio:Work">
+	 <li>
+		<at select='?work frbr:creator/co:item/co:itemContent ??author' mode="simple" ></at>. 
+		<at select='?work frbr:realization ??exp.' ></at>
+	</li>
+</template>
+<template match="?person -> foaf:Person" mode="simple">
+	{{person.foaf_givenName[0]}}. {{person.foaf_familyName | single}}<span ng-if="!last">, </span>
+</template>
+<template match='?exp -> fabio:Expression'>
+	<i>{{exp.dcterms_title}}</i>, cites {{count(exp.cito_cites) }} 
+      papers and is cited by 
+	<foreach select="?exp c4o:hasGlobalCitationFrequency ??gcf">{{ gcf.c4o_hasGlobalCountValue }}</foreach>
+	more.
+        Published in <at select="??issue frbr:part ?exp"></at> 
+      {{exp.fabio_hasPublicationYear | wrap:'($$)'}}.  
+      DOI: {{exp.prism_doi}}.
+     <at select="?exp frbr:part ??part">
+</template>
+<template match="?issue -> fabio:JournalIssue">
+   <i>{{issue.dcterms_title | wrap:'"$$", ' }}</i>
+   <at select="?issue frbr_partOf ??vol"></at>{{issue.prism_issueIdentifier | wrap:"($$)"}}
+</template>
+<template match="?vol -> fabio:JournalVolume">
+    <at select="?vol frbr_partOf ??journal"></at> 
+   {{vol.prism_volume }}</template>
+<template match="?abstract -> sro:Abstract">
+    <p class="small"><b>Abstract: </b> {{abstract.c4o_hasContent}}</p>
+</template>
+</script>
+<script id="jsontemplates"  type="text/template">{
+	"?person -> foaf:Person": {
+		"detail": 15,
+		"priority": 4,
+		"content": "<p>This collection has {{ count(person.pro_holdsRoleInTime) }} papers by author {{person.foaf_givenName}} {{person.foaf_familyName | single}}.<p><ol><at select='?person pro_holdsRoleInTime / pro_relatesToDocument ?work' /></ol>"
+	}
+}
+</script>
+<script id="queryTemplate"  type="text/template">
+	<rslt templates="#ta-jtemplates" prefixes="#ta-prefixes" triplestore="{{data.triplestore}}">
+		<template name='start'>
+			<at select = "{{data.startWith}}" preload =  "{{data.preload}}"></at>
+		</template>
+		{{data.xtemplates}}
+	</rslt>
+</script>
+</html>

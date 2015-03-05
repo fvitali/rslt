@@ -1,0 +1,106 @@
+/*
+lancet.css
+by Fabio Vitali
+This work is licensed under a Creative Commons Attribution 4.0 International License (http://creativecommons.org/licenses/by/4.0/).
+You are free to:
+* Share - copy and redistribute the material in any medium or format
+* Adapt - remix, transform, and build upon the material
+for any purpose, even commercially.
+The licensor cannot revoke these freedoms as long as you follow the license terms.
+Under the following terms:
+* Attribution - You must give appropriate credit, provide a link to the license, and indicate if changes were made. You may do so in any reasonable manner, but not in any way that suggests the licensor endorses you or your use.
+*/
+
+
+html, body {
+	height: 100% ;
+	max-height: 100% ;
+}
+
+.abstract {
+	margin: 0px 20px 10px 20px; 
+	font-size: 90%;
+	color: #303090; 
+}
+
+.footer {
+  position: fixed;
+  bottom: 0;
+  padding: 10px;
+  margin-top: 10px;  
+  width: 100%;
+  height: 40px;
+  background-color: #f5f5f5;
+}
+
+.white, .white a {
+  color: #ffffff;
+}
+
+#push {
+	height: 40px; 
+}
+
+.authorList .nav li a {
+	padding: 0px; 
+	margin-left: 25px; 
+}
+
+.authorList .nav li label {
+	padding: 0px; 
+	margin: 0px; 
+	margin-left: 15px; 
+}
+
+.authorName {
+	font-style: italic; 
+	font-weight: normal;
+}
+
+label .glyphicon {
+	font-weight: normal;
+	color: #707070;
+	font-size: 70%; 
+}
+@-webkit-keyframes blink {
+0% { opacity: 1.0; } 50% { opacity: 0.0; } 100% { opacity: 1.0; }
+}
+.blink {
+    -webkit-animation-name: blink;
+    -webkit-animation-iteration-count: infinite;
+    -webkit-animation-timing-function: linear; 
+    -webkit-animation-duration: 1.5s;
+}
+
+.gray {
+	font-size: 75%; 
+	color: #707070; 
+}
+
+
+.authorList {
+	max-height: 90% ;
+	margin-top: 60px; 
+	overflow: scroll; 
+	overflow-x: hidden; 
+}
+
+.authorPapers {
+	max-height: 90% ;
+	margin-top: 60px; 
+	overflow: scroll; 
+	overflow-x: hidden; 
+}
+
+.ui-autocomplete {
+	z-index: 1500; 
+}
+
+.ui-menu-item.ui-state-focus {
+	font-weight: normal; 
+}
+
+*[ng-click] {
+	cursor: pointer; 
+	cursor: hand;
+}

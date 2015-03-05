@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<!--
+Papers by Ian Horrocks - Simplest RSLT example
+by Fabio Vitali
+This work is licensed under a Creative Commons Attribution 4.0 International License (http://creativecommons.org/licenses/by/4.0/).
+You are free to:
+* Share - copy and redistribute the material in any medium or format
+* Adapt - remix, transform, and build upon the material
+for any purpose, even commercially.
+The licensor cannot revoke these freedoms as long as you follow the license terms.
+Under the following terms:
+* Attribution - You must give appropriate credit, provide a link to the license, and indicate if changes were made. You may do so in any reasonable manner, but not in any way that suggests the licensor endorses you or your use.
+-->
+<html ng-app="simplestRSLT">
+	<head>
+		<title>Papers by Ian Horrocks - Simplest RSLT example</title>
+		<script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.js"></script>
+		<script src="//ajax.googleapis.com/ajax/libs/angularjs/1.2.12/angular.js"></script>
+		<script src="rslt.js"> </script>
+		<script>
+			var app = angular.module('simplestRSLT', ['rslt']);
+		</script>
+	</head>
+	<body>	
+		<h1>Papers by Ian Horrocks</h1>
+		<p>This is the simplest application of RSLT, the RDF Stylesheet Language (Transformation). Have a look at the source. </p>
+		
+		<rslt triplestore="http://two.eelst.cs.unibo.it:8181/data/query">
+			<prefix ns="rdf: http://www.w3.org/1999/02/22-rdf-syntax-ns#" />
+			<prefix ns="rdfs: http://www.w3.org/2000/01/rdf-schema#" />
+			<prefix ns="foaf: http://xmlns.com/foaf/0.1/" />
+			<prefix ns="frbr: http://purl.org/vocab/frbr/core#" />
+			<prefix ns='co: http://purl.org/co/' />
+			<prefix ns="pro: http://purl.org/spar/pro/" />
+			<prefix ns="dcterms: http://purl.org/dc/terms/" />
+			<prefix ns="fabio: http://purl.org/spar/fabio/" />
+			<prefix ns="cito: http://purl.org/spar/cito/" />
+			<prefix ns="c4o: http://purl.org/spar/c4o/" />
+			<prefix ns="prism: http://prismstandard.org/namespaces/basic/2.0/" />
+
+			<template match='$start'>
+				<applytemplates select = "??person foaf:familyName 'Horrocks'."></applytemplates>
+			</template>
+			<t match="?person -> foaf:Person">
+				<p>Found {{ count(person.pro_holdsRoleInTime) }} papers authored
+				by {{person.foaf_givenName}} {{person.foaf_familyName | single}}:</p> 
+				<ul><at select='?person pro_holdsRoleInTime / pro_relatesToDocument ??work'></at></ul>
+			</t>
+			<t match="?work -> fabio:Work">
+				 <li>
+					<at select='?work frbr:creator/co:item/co:itemContent ??author' mode="simple" ></at>. 
+					<at select='?work frbr:realization ??exp.' ></at>
+				</li>
+			</t>
+			<t match="?person -> foaf:Person" mode="simple">
+				{{person.foaf_givenName[0]}}. {{person.foaf_familyName | single}}<span ng-if="!last">, </span>
+			</t>
+			<t match='?exp -> fabio:Expression'>
+				<i>{{exp.dcterms_title}}</i>, 
+				{{exp.fabio_hasPublicationYear}}, cites {{count(exp.cito_cites) }} papers and is cited by 
+				<foreach select="?exp c4o:hasGlobalCitationFrequency ??gcf">{{ gcf.c4o_hasGlobalCountValue }}</foreach>
+				more. Its DOI is {{exp.prism_doi}}.
+			</t>
+		</rslt>
+	</body>
+</html>
