@@ -38,23 +38,7 @@ Under the following terms:
 				}
 			}
 			
-			function switchAction(value) {
-				$('#collapseTriplestore').collapse('show')				
-				if (value==1) {
-					$('#Panel-prefixes').hide()
-					$('#Panel-startwith').hide()
-					$('#Panel-preload').hide()
-					$('#Panel-queries').hide()
-				} else {
-					$('#Panel-prefixes').show()
-					$('#Panel-startwith').show()
-					$('#Panel-preload').show()
-					$('#Panel-queries').show()
-				}
-				debugger; 
-			}
-		
-			var finalQuery ;
+			var finalQueries = [] ;
 			var prefixes ;
 
 			var app = angular.module('myQuery', ['rslt','ui.bootstrap']);
@@ -70,6 +54,9 @@ Under the following terms:
 				$scope.interpolate = $interpolate
 				$scope.encode = encodeURI
 				$scope.startQuery = function() {
+					finalQueries = []
+					$scope.theQueries = finalQueries
+					$scope.currentQuery = 1; 
 					var tpl = $('#queryTemplate').html()
 					var s = $scope.interpolate(tpl)(this)
 					var out = $scope.compile(s)(this)
@@ -79,7 +66,7 @@ Under the following terms:
 					return prefixes.short(s)
 				}
 				if ($window.localStorage['RSLTplayground']) {
-					d = JSON.parse($window.localStorage['RSLTplayground'])
+					var d = JSON.parse($window.localStorage['RSLTplayground'])
 					$scope.data = {
 						activity: d.activity,
 						triplestore: d.triplestore,
@@ -100,17 +87,20 @@ Under the following terms:
 						jtemplates: $('#jsontemplates').html().trim()
 					}
 				}
-				$scope.finalQuery = [] ;
-				$scope.currentQuery = 0; 
-				$scope.$watch(function() {return finalQuery},function(newValue) { 
-						$scope.finalQuery.push(newValue) 
-				})
+				$scope.source = 0; 
+				$scope.currentQuery = 1; 
+				$scope.theQueries = finalQueries
 				$scope.$watch(function() {return entities},function(newValue) { 
 					$scope.entities = newValue 
 					$timeout(function() {
 						$('*[collapsible]').collapse('hide')
 					}, 2000)
 				})
+				$scope.$watch('theQueries', function(newV, oldV) {
+					if (newV) {
+						$('#queries').attr('max',newV.length)
+					}
+				}, true) 
 				$scope.$watch('data', function(newV, oldV) {
 					var d = {
 						activity: $scope.data.activity,
@@ -124,11 +114,6 @@ Under the following terms:
 					$window.localStorage['RSLTplayground'] = JSON.stringify(d)
 				}, true);
 			});
-			app.filter('test', function() {
-				return function(input) {
-					return input;
-				};
-			})
 		</script>
 	</head>
 <body ng-controller="myCtrl">
@@ -162,11 +147,7 @@ Under the following terms:
 							<div class="panel-heading">
 							  <h4 class="panel-title">
 								<a data-toggle="collapse" data-parent="#leftAccordion" href="#collapseTriplestore">
-								  Query a triplestore
-								</a>
-								<input type="range" id="slider" min="0" max="1" style="width: 40px;" onchange="switchAction(this.value)"/>
-								<a data-toggle="collapse" data-parent="#leftAccordion" href="#collapseTriplestore">
-								  Load a file
+								  Source (SPARQL 1.1 triplestore)
 								</a>
 							  </h4>
 							</div>
@@ -226,13 +207,14 @@ Under the following terms:
 							  <h4 class="panel-title">
 								<a data-toggle="collapse" data-parent="#leftAccordion" href="#collapseFinalquery">
 								  Performed Queries 
-								  <input type="range" name="queries" min="0" max="{{finalQuery.length}}" ng-model="currentQuery">
 								</a>
 							  </h4>
 							</div>
 							<div id="collapseFinalquery" class="panel-collapse collapse">
 							  <div class="panel-body">
-							  <pre class="small">{{finalQuery[currentQuery] | test }}
+							  Showing query # <input type="number" id="queries" name="queries" min="1" ng-model="currentQuery" style="width: 50px; text-align:right;">
+							  <span> of {{theQueries.length}}.</span>
+							  <pre class="small">{{theQueries[currentQuery-1]}}
 							  </pre>
 							  </div>
 							</div>
@@ -336,7 +318,7 @@ Under the following terms:
 		<div class="footer">
 			<div class="container">
 				<p class="muted credit">
-					&copy; 2014 Fabio Vitali, University of Bologna &middot;
+					&copy; 2015 Fabio Vitali, University of Bologna &middot;
 				</p>
 			</div>
 		</div>
@@ -352,7 +334,7 @@ Under the following terms:
 		</div>
 		<div class="modal-body">
 <p>RSLT Playground is an interactive tool for working with RSLT stylesheets for RDF triples and entities. </p>
-<p>This is version 0.1 nep&alpha;l (not even pre-alpha level), October 2014 </p>
+<p>This is version 0.2 nep&alpha;l (not even pre-alpha level), March 2015 </p>
 <p>It was created in the Web technologies lab of the University of Bologna by Fabio Vitali (<a href="mailto:fabio@cs.unibo.it">fabio@cs.unibo.it</a>)</p>
 		</div>
 		<div class="modal-footer">
@@ -448,7 +430,7 @@ PREFIX sro: <http://salt.semanticauthoring.org/ontologies/sro#>
 	"?person -> foaf:Person": {
 		"detail": 15,
 		"priority": 4,
-		"content": "<p>This collection has {{ count(person.pro_holdsRoleInTime) }} papers by author {{person.foaf_givenName}} {{person.foaf_familyName | single}}.<p><ol><at select='?person pro_holdsRoleInTime / pro_relatesToDocument ?work' /></ol>"
+		"content": "<p>This collection has {{ count(person.pro_holdsRoleInTime) }} papers by author {{person.foaf_givenName}} {{person.foaf_familyName | single}}.<p><ol><at select='?person pro_holdsRoleInTime / pro_relatesToDocument ??work' /></ol>"
 	}
 }
 </script>

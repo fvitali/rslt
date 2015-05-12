@@ -170,7 +170,7 @@ Under the following terms:
 			<template name='issue'>
 				<at select="{{$root.selectedIssue}}"  mode="alone"></at>
 			</template>
-			<template match="?person -> foaf:Person" priority='5'>
+			<template match="?person -> foaf:Person" priority='4'>
 				<h3>We found {{ x=count(person.pro_holdsRoleInTime) }} paper{{ x | plural }} authored
 				by {{person.foaf_givenName}} {{person.foaf_familyName | single}}:</h3> 
 				<ol><at select='?person pro_holdsRoleInTime / pro_relatesToDocument ??work'></at></ol>
